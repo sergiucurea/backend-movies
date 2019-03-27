@@ -4,7 +4,6 @@ var url="mongodb://localhost:27017/";
 let i=1;
 let index=0;
 
-
 MongoClient.connect(url,function(err,db){
     console.log("here");
     var dbo=db.db('movieDB');
