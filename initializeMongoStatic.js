@@ -17,24 +17,39 @@ MongoClient.connect(url,function(err,db){
       });
 });
 
+console.log(i);
 
-while(i<=30){
+ function getPage(){ 
 
-    getJSON('https://api.themoviedb.org/3/discover/movie?api_key=9e72f98ad9d5c68503cf7a2b857f2b8e&language=en-US&page='+i, function(error, response){
-    response.results.map(result=>(result.id=index++));
-    MongoClient.connect(url,function(err,db){
-        if (err) throw err;
-        var dbo=db.db('movieDB');
-        dbo.collection('movies').insertMany(response.results,function(err,res){
+     return new Promise(resolve=>{
+            getJSON('https://api.themoviedb.org/3/discover/movie?api_key=9e72f98ad9d5c68503cf7a2b857f2b8e&language=en-US&page='+i, function(error, response){
+            response.results.map(result=>(result.id=index++));
+            MongoClient.connect(url,function(err,db){
+            if (err) throw err;
+            var dbo=db.db('movieDB');
+            dbo.collection('movies').insertMany(response.results,function(err,res){
             if(err) throw err;
-            console.log("document inserted");
+            console.log("page inserted");
             db.close();
-        });
-    });    
-});
-    console.log(i);
-    i++;    
+            resolve(i);
+                });
+            });    
+        });       
+    })
 }
+    
+async function asyncCall(){
+   //cannot call page greater than 1000 from the api 
+if(i<1001){
+var result=await getPage();
+    console.log(result);
+    i++;  
+    asyncCall();
+    } else {
+        console.log("Initialization completed");
+    }      
+}
+asyncCall();
 
 getJSON('https://api.themoviedb.org/3/genre/movie/list?api_key=9e72f98ad9d5c68503cf7a2b857f2b8e&language=en-US',function(error,response){
     MongoClient.connect(url,function(err,db){
@@ -42,7 +57,7 @@ getJSON('https://api.themoviedb.org/3/genre/movie/list?api_key=9e72f98ad9d5c6850
         var dbo=db.db('movieDB');
         dbo.collection('genres').insertMany(response.genres,function(err,res){
             if(err) throw err;
-            console.log("document inserted");
+            console.log("Genres inserted");
             db.close();
         });
     });

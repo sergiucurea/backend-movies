@@ -25,6 +25,30 @@ var sort_by = function (field, reverse, primer) {
     }
 }
 
+app.get('/search',function(req,res){
+
+    let searchArray=req.query.query;
+    let page_nr = parseInt(req.query.page);
+    let limit = parseInt(req.query.limit);
+    let lower_limit = (page_nr - 1) * limit;
+    let upper_limit = lower_limit + limit;
+
+    console.log(req.query);
+    console.log(searchArray);
+    MongoClient.connect(url, function (err, db) {
+
+        var dbo = db.db("movieDB");
+        dbo.collection("movies").createIndex({title: "text"});          
+        dbo.collection("movies").find({$text:{$search: searchArray}}).project({score:{$meta: "textScore"}}).sort({score: {$meta: "textScore"}}).toArray(function (er, result) {
+            if (err) throw err;
+            //result.sort(sort_by('id', false, parseInt));
+            console.log(result);
+            res.json(result.slice(lower_limit, upper_limit));
+            db.close();
+        });
+    });
+})
+
 app.get('/', function (req, res) {
 
     let category = req.query.category;
@@ -68,10 +92,6 @@ app.get('/', function (req, res) {
 
                 });
             })
-
-
-
-
         })
     } else {
 
