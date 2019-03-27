@@ -1,9 +1,7 @@
-var MongoClient = require('mongodb').MongoClient;
-var url = "mongodb://localhost:27017/";
-var express = require('express');
-var app = express();
-
-let index = 1;
+let MongoClient = require('mongodb').MongoClient;
+let url = "mongodb://localhost:27017/";
+let express = require('express');
+let app = express();
 
 app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
@@ -11,9 +9,9 @@ app.use(function (req, res, next) {
     next();
 });
 
-var sort_by = function (field, reverse, primer) {
-
-    var key = primer ?
+let sort_by = function (field, reverse, primer) {
+    
+    let key = primer ?
         function (x) { return primer(x[field]) } :
         function (x) { return x[field] };
     reverse = !reverse ? 1 : -1;
@@ -25,23 +23,19 @@ var sort_by = function (field, reverse, primer) {
     }
 }
 
-app.get('/search',function(req,res){
+app.get('/search', function (req, res) {
 
-    let searchArray=req.query.query;
+    let searchArray = req.query.query;
     let page_nr = parseInt(req.query.page);
     let limit = parseInt(req.query.limit);
     let lower_limit = (page_nr - 1) * limit;
     let upper_limit = lower_limit + limit;
 
-    console.log(req.query);
-    console.log(searchArray);
     MongoClient.connect(url, function (err, db) {
-
-        var dbo = db.db("movieDB");
-        dbo.collection("movies").createIndex({title: "text"});          
-        dbo.collection("movies").find({$text:{$search: searchArray}}).project({score:{$meta: "textScore"}}).sort({score: {$meta: "textScore"}}).toArray(function (er, result) {
+        let dbo = db.db("movieDB");
+        dbo.collection("movies").createIndex({ title: "text" });
+        dbo.collection("movies").find({ $text: { $search: searchArray } }).project({ score: { $meta: "textScore" } }).sort({ score: { $meta: "textScore" } }).toArray(function (er, result) {
             if (err) throw err;
-            //result.sort(sort_by('id', false, parseInt));
             console.log(result);
             res.json(result.slice(lower_limit, upper_limit));
             db.close();
@@ -82,7 +76,7 @@ app.get('/', function (req, res) {
 
                 console.log(values);
                 MongoClient.connect(url, function (err, db) {
-                    var dbo = db.db("movieDB");
+                    let dbo = db.db("movieDB");
                     dbo.collection("movies").find({ genre_ids: { $all: values } }).toArray(function (er, result) {
                         if (err) throw err;
                         result.sort(sort_by('id', false, parseInt));
@@ -97,7 +91,7 @@ app.get('/', function (req, res) {
 
         MongoClient.connect(url, function (err, db) {
 
-            var dbo = db.db("movieDB");
+            let dbo = db.db("movieDB");
             dbo.collection("movies").find({ id: { $gt: lower_limit, $lt: upper_limit } }).toArray(function (er, result) {
                 if (err) throw err;
                 result.sort(sort_by('id', false, parseInt));
